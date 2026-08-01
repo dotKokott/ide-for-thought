@@ -7,13 +7,15 @@
    *
    * Presentational: SettingsDialog owns the state (so keys + model apply
    * together on Done) and binds it here. `providerViews` is the read-only
-   * loaded status (never carries a plaintext key).
+   * loaded status (never carries a plaintext key). The Console login button in
+   * the Anthropic section just writes into that provider's unsaved key input.
    */
   import { groupedModelOptions } from '../../../shared/tools/models';
   import { EFFORT_LEVELS, type Effort } from '../../../shared/tools/effort';
   import { PROVIDERS, PROVIDER_IDS, type ProviderId } from '../../../shared/tools/providers';
   import type { ProviderConfigView, CustomModel, ConnectionCheckResult } from '../../../shared/tools/types';
   import { voiceSettings, VOICE_MODEL_OPTIONS } from '../voice/voice-settings.svelte';
+  import AnthropicConsoleAuth from './AnthropicConsoleAuth.svelte';
 
   /** Per-provider input state (structurally shared with SettingsDialog, which
    *  owns it — kept in sync by shape, not import, to avoid cross-component type
@@ -186,6 +188,9 @@
           <button class="link-btn" onclick={() => setInput(id, { clear: true, key: '' })}>Clear saved key</button>
         {:else if inp.clear}
           <button class="link-btn" onclick={() => setInput(id, { clear: false })}>Cancel clear</button>
+        {/if}
+        {#if id === 'anthropic'}
+          <AnthropicConsoleAuth onGenerated={(apiKey) => setInput('anthropic', { key: apiKey, clear: false })} />
         {/if}
       </div>
     {/if}

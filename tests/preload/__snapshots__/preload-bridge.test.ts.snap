@@ -390,6 +390,8 @@ exports[`preload contextBridge contract (#676) > matches the full method surface
   "tools": [
     "cancel",
     "checkConnection",
+    "consoleLoginBegin",
+    "consoleLoginComplete",
     "execute",
     "getKeyStorage",
     "getSettings",

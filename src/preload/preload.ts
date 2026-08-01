@@ -470,6 +470,8 @@ contextBridge.exposeInMainWorld('api', {
     getKeyStorage: () => invoke(Channels.TOOL_GET_KEY_STORAGE),
     checkConnection: (providerId: Parameters<ChannelMap['tool:checkConnection']>[0], candidateKey?: string, baseURL?: string) =>
       invoke(Channels.TOOL_CHECK_CONNECTION, providerId, candidateKey, baseURL),
+    consoleLoginBegin: () => invoke(Channels.TOOL_CONSOLE_LOGIN_BEGIN),
+    consoleLoginComplete: (callbackInput: string) => invoke(Channels.TOOL_CONSOLE_LOGIN_COMPLETE, callbackInput),
     onInvoke: (cb: (toolId: string) => void) => subscribe(Channels.TOOL_INVOKE, cb),
   },
   types: {

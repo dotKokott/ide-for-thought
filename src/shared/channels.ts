@@ -451,6 +451,11 @@ export const Channels = {
   TOOL_GET_KEY_STORAGE: 'tool:getKeyStorage',
   /** Actively validate an API key against Anthropic (a free models.list GET). */
   TOOL_CHECK_CONNECTION: 'tool:checkConnection',
+  /** Anthropic Console PKCE login (experimental): open the consent page, then
+   *  exchange the pasted callback for a key the caller saves as an ordinary
+   *  Anthropic key. Two steps because the user has to leave for the browser. */
+  TOOL_CONSOLE_LOGIN_BEGIN: 'tool:consoleLoginBegin',
+  TOOL_CONSOLE_LOGIN_COMPLETE: 'tool:consoleLoginComplete',
   /** Cached-or-fetched YouTube poster thumbnail bytes for a video id (offline). */
   YOUTUBE_THUMBNAIL: 'youtube:thumbnail',
   /** Prepare the system prompt + first message + model for a conversational tool. */

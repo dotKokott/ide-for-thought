@@ -772,6 +772,12 @@ export interface ToolsApi {
     candidateKey?: string,
     baseURL?: string,
   ): Promise<import('../../../shared/tools/types').ConnectionCheckResult>;
+  /** Anthropic Console login, step 1 (experimental): opens the consent page in
+   *  the OS browser. The PKCE verifier never leaves main. */
+  consoleLoginBegin(): Promise<void>;
+  /** Step 2: exchange the pasted `code#state` for a minted key, tagged so the
+   *  provider applies Console request rules. Save it like any typed key. */
+  consoleLoginComplete(callbackInput: string): Promise<string>;
   onInvoke(cb: (toolId: string) => void): void;
 }
 

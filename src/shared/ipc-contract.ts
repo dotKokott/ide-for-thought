@@ -416,6 +416,9 @@ export interface ChannelMap {
   'tool:setSettings': (update: LLMSettingsUpdate) => void;
   'tool:getKeyStorage': () => ApiKeyStorage;
   'tool:checkConnection': (providerId: ProviderId, candidateKey?: string, baseURL?: string) => ConnectionCheckResult;
+  'tool:consoleLoginBegin': () => void;
+  /** Returns the minted key, tagged for the ordinary Anthropic key slot. */
+  'tool:consoleLoginComplete': (callbackInput: string) => string;
 
   // Typed objects (type registry — #1062)
   'types:list': () => TypeCatalogInfo;

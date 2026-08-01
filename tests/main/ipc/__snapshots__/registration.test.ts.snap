@@ -228,6 +228,8 @@ exports[`IPC registration contract (#997) > matches the known set of registered 
   "templates:saveAs",
   "tool:cancel",
   "tool:checkConnection",
+  "tool:consoleLoginBegin",
+  "tool:consoleLoginComplete",
   "tool:execute",
   "tool:getKeyStorage",
   "tool:getSettings",

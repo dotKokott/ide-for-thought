@@ -1,3 +1,4 @@
+import { shell } from 'electron';
 import { Channels } from '../../shared/channels';
 import { handle } from './typed-ipc';
 import { rebuildMenu } from '../menu';
@@ -10,6 +11,10 @@ import { toSkillInfo, type SkillCatalogInfo } from '../../shared/skills/types';
 import type { MenuConfig } from '../../shared/skills/menu-config';
 import { getSettingsForDisplay, saveSettings, getApiKeyStorage } from '../llm/settings';
 import { checkConnection } from '../llm/validate';
+import {
+  beginAnthropicConsoleOAuth,
+  completeAnthropicConsoleOAuth,
+} from '../llm/anthropic-console/oauth';
 import type { ToolExecutionRequest, LLMSettingsUpdate } from '../../shared/tools/types';
 import type { ProviderId } from '../../shared/tools/providers';
 import { winFromEvent } from './helpers';
@@ -98,6 +103,16 @@ export function registerTools(): void {
   handle(Channels.TOOL_SET_SETTINGS, (_e, update: LLMSettingsUpdate) => saveSettings(update));
 
   handle(Channels.TOOL_GET_KEY_STORAGE, () => getApiKeyStorage());
+
+  // Anthropic Console login (experimental). The PKCE verifier stays in main;
+  // the minted key goes back to the settings dialog as an ordinary unsaved key,
+  // so the existing Done/Cancel + encrypt-on-save path handles it from there.
+  handle(Channels.TOOL_CONSOLE_LOGIN_BEGIN, async () => {
+    await shell.openExternal(beginAnthropicConsoleOAuth().url);
+  });
+
+  handle(Channels.TOOL_CONSOLE_LOGIN_COMPLETE, (_e, callbackInput: string) =>
+    completeAnthropicConsoleOAuth(callbackInput));
 
   // Active key validation for the settings "Check connection" button — an
   // unsaved typed key (if any) takes precedence over the stored one. Per

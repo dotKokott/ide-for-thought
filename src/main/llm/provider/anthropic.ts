@@ -1,19 +1,24 @@
 /**
  * The Anthropic implementation of the provider seam (#1148).
  *
- * This is the ONLY file under `src/main/llm/` that imports `@anthropic-ai/sdk`
- * (alongside the settings module, which only reads model ids). Everything
- * Claude-specific — the client, message/tool-result block shapes, streaming
- * events, `output_config.effort`, server-side web tools, code-execution
- * `container` ids, usage-field names, and web-search citations — is translated
- * to and from the neutral types in `./types` here. The agentic loop in
- * `../index.ts` sees none of it.
+ * This is the ONLY production file under `src/main/llm/` that imports
+ * `@anthropic-ai/sdk`. Everything Claude-specific — the client,
+ * message/tool-result block shapes, streaming events, `output_config.effort`,
+ * server-side web tools, code-execution `container` ids, usage-field names,
+ * web-search citations, and SDK middleware adaptation — is translated here.
+ * SDK-neutral Console request transformation lives beside the auth feature;
+ * the agentic loop in `../index.ts` sees none of the SDK surface.
  */
-import Anthropic from '@anthropic-ai/sdk';
+import Anthropic, { type Middleware } from '@anthropic-ai/sdk';
 import type { Citation, TurnUsage } from '../../../shared/types';
 import type { ConnectionCheckResult } from '../../../shared/tools/types';
 import { toConnectionResult } from '../connection-error';
 import type { Effort } from '../../../shared/tools/effort';
+import {
+  isAnthropicConsoleRequestBody,
+  parseAnthropicKey,
+  prepareAnthropicConsoleRequest,
+} from '../anthropic-console/request-middleware';
 import type {
   ChatMessage,
   CompletionRequest,
@@ -108,12 +113,48 @@ function mapStopReason(reason: Anthropic.Message['stop_reason']): StopReason {
   return 'end';
 }
 
+function isMessagesRequest(url: string): boolean {
+  try {
+    return new URL(url).pathname.endsWith('/v1/messages');
+  } catch {
+    return false;
+  }
+}
+
+/** Console compatibility at the sole Anthropic SDK boundary. */
+const anthropicConsoleRequestMiddleware: Middleware = async (request, next) => {
+  if (!isMessagesRequest(request.url) || typeof request.body !== 'string') {
+    return next(request);
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(request.body);
+  } catch {
+    return next(request);
+  }
+  if (!isAnthropicConsoleRequestBody(parsed)) return next(request);
+
+  const body = prepareAnthropicConsoleRequest(parsed);
+  return next({ ...request, body: JSON.stringify(body) });
+};
+
 export class AnthropicProvider implements LLMProvider {
   readonly id = 'anthropic';
   private readonly client: Anthropic;
 
+  /**
+   * `apiKey` may carry the Console tag (see `parseAnthropicKey`). Stripping it
+   * here — the one place the SDK client is built — means every caller keeps
+   * passing the stored key through verbatim and a Console key needs no separate
+   * plumbing, storage or precedence rule.
+   */
   constructor(apiKey: string) {
-    this.client = new Anthropic({ apiKey });
+    const parsed = parseAnthropicKey(apiKey);
+    this.client = new Anthropic({
+      apiKey: parsed.apiKey,
+      ...(parsed.isConsole ? { middleware: [anthropicConsoleRequestMiddleware] } : {}),
+    });
   }
 
   // History entries are Anthropic message params under the hood; the loop only

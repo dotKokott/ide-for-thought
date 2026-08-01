@@ -62,6 +62,11 @@ const READ_ALLOWLIST = new Set<string>([
   'unlinkedMentions', 'checkConnection',
   // local per-note history reads (#1158); `restore` is denylisted (a mutation)
   'getRevision',
+  // Console login: `begin` opens the OS browser (the PKCE state lives in main),
+  // `complete` exchanges the pasted code and RETURNS the minted key. Neither
+  // persists anything — the key is saved by the ordinary (denylisted)
+  // setSettings path once the user hits Done.
+  'consoleLoginBegin', 'consoleLoginComplete',
 ]);
 
 function walk(dir: string): string[] {
